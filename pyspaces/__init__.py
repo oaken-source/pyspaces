@@ -81,13 +81,15 @@ class PySpaceServer(ThreadingMixIn, SimpleXMLRPCServer):
     The tuple spaces server.
     '''
 
-    def __init__(self, server, port):
+    def __init__(self, server, port, *args, **kwargs):
         '''
         constructor - start listening on the given server and port.
         '''
         super(PySpaceServer, self).__init__(
             (server, port),
             allow_none=True,
-            use_builtin_types=True
+            use_builtin_types=True,
+            *args,
+            **kwargs
         )
         self.register_instance(PySpaceApi())
