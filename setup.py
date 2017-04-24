@@ -14,7 +14,9 @@ setup(
         'pyspaces',
     ],
 
-    install_requires=[],
+    install_requires=[
+        'posix_ipc',
+    ],
 
     test_suite='tests',
     tests_require=[
