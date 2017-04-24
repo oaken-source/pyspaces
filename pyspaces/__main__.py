@@ -3,7 +3,7 @@ this module is the entry point for the tuple spaces server.
 '''
 
 import argparse
-from pyspaces import PySpaceServer
+from pyspaces import PySpaceXMLRPCServer
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
             help='the port to listen on for pyspaces client connections')
 
     args = parser.parse_args()
-    server = PySpaceServer(args.listen, args.port)
+    server = PySpaceXMLRPCServer(args.listen, args.port)
     server.serve_forever()
 
 

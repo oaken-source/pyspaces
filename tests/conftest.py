@@ -16,7 +16,7 @@ def port():
 @pytest.fixture(scope='module')
 def server(request, hostname, port):
     def init():
-        srv = pyspaces.PySpaceServer(hostname, port)
+        srv = pyspaces.PySpaceXMLRPCServer(hostname, port)
         srv.serve_forever()
     p = Process(target=init)
     p.start()
@@ -27,4 +27,4 @@ def server(request, hostname, port):
 
 @pytest.fixture
 def pyspace(server, hostname, port):
-    return pyspaces.PySpace('http://%s:%d' % (hostname, port))
+    return pyspaces.PySpaceXMLRPCClient('http://%s:%d' % (hostname, port))
