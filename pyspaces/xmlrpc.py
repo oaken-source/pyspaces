@@ -5,7 +5,7 @@ This module implements a simple client and server component for tuple spaces.
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 from socketserver import ThreadingMixIn
-from threading import Lock, Condition
+from threading import Condition
 
 
 class PySpaceXMLRPCApi(object):
