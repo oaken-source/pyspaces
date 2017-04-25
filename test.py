@@ -3,7 +3,8 @@ from pyspaces import PySpaceShMem
 
 def main():
     with PySpaceShMem() as space:
-        pass
+        space.put(('hello', 'world'))
+        print(space.take((None, None)))
 
 if __name__ == '__main__':
     main()
