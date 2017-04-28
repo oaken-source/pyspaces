@@ -7,10 +7,8 @@ import time
 import logging
 import struct
 import pickle
-from logging.config import fileConfig
 from posix_ipc import SharedMemory, Semaphore, ExistentialError, O_CREX
 
-fileConfig('logging.ini')
 LOG = logging.getLogger()
 
 SHMEM_SIZE = 1024 * 1024 * 1024 # 1G
@@ -72,7 +70,6 @@ class PySpaceShMem(object):
                 LOG.info('  updating offset data')
                 struct.pack_into('I', self._mmap, 0x10, offset + len(data) + 6)
                 self._lock.release()
-
 
             def take(self, tpl):
                 '''
