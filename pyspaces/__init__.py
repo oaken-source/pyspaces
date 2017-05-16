@@ -1,5 +1,5 @@
 '''
-import xmlrpc pyspaces to module level
+import pyspaces implementations to module level
 '''
 
 import logging
@@ -14,11 +14,11 @@ logging_config = dict(
     handlers = {
         'h': {'class': 'logging.StreamHandler',
             'formatter': 'f',
-            'level': logging.DEBUG}
+            'level': logging.WARNING}
         },
     root = {
         'handlers': ['h'],
-        'level': logging.DEBUG,
+        'level': logging.WARNING,
         },
     )
 

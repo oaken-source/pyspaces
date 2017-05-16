@@ -4,53 +4,44 @@ This module implements a simple client and server component for tuple spaces.
 
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
-from socketserver import ThreadingMixIn
-from threading import Condition
 
 
-class PySpaceXMLRPCApi(object):
+class PySpaceApi(object):
     '''
     this class implements the tuple space api on the server side.
     '''
 
     def __init__(self):
         '''
-        constructor - prepare the tuple storage and the synchronization
-        primitives.
+        constructor - prepare the tuple storage
         '''
         self._tuples = []
-        self._condition = Condition()
 
     def put(self, tpl):
         '''
         put the given tuple into the tuple space.
         '''
-        with self._condition:
-            self._tuples.append(tpl)
-            self._condition.notify_all()
+        self._tuples.append(tpl)
 
     def take(self, tpl):
         '''
         take the queried tuple from the tuple space and return it.
         '''
-        while True:
-            with self._condition:
-                res = self._find(tpl)
-                if res is not None:
-                    self._tuples.remove(res)
-                    return res
-                self._condition.wait()
+        for i, t in enumerate(self._tuples):
+            if len(tpl) == len(t) and all(x == y or y is None for (x, y) in zip(tpl, t)):
+                res = self._tuples[i]
+                del self._tuples[i]
+                return res
+        return None
 
     def peek(self, tpl):
         '''
         seek the given tuple in the tuple space and return it.
         '''
-        while True:
-            with self._condition:
-                res = self._find(tpl)
-                if res is not None:
-                    return res
-                self._condition.wait()
+        for i, t in enumerate(self._tuples):
+            if len(tpl) == len(t) and all(x == y or y is None for (x, y) in zip(tpl, t)):
+                return self._tuples[i]
+        return None
 
     def _find(self, tpl):
         '''
@@ -69,14 +60,19 @@ class PySpaceXMLRPCClient(ServerProxy):
     The tuple spaces client.
     '''
 
-    def __init__(self, server):
+    def __init__(self, server, *args, **kwargs):
         '''
         constructor - connect to the given server.
         '''
-        super(PySpaceXMLRPCClient, self).__init__(server, allow_none=True, use_builtin_types=True)
+        super(PySpaceXMLRPCClient, self).__init__(
+            server,
+            allow_none=True,
+            use_builtin_types=True,
+            *args, **kwargs
+        )
 
 
-class PySpaceXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
+class PySpaceXMLRPCServer(SimpleXMLRPCServer):
     '''
     The tuple spaces server.
     '''
@@ -89,7 +85,7 @@ class PySpaceXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
             (server, port),
             allow_none=True,
             use_builtin_types=True,
-            *args,
-            **kwargs
+            logRequests=False,
+            *args, **kwargs
         )
-        self.register_instance(PySpaceXMLRPCApi())
+        self.register_instance(PySpaceApi())
