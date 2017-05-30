@@ -141,6 +141,32 @@ class PySpaceShMem(object):
                         return data
                     start += 6 + length
 
+            def optimize(self):
+                '''
+                remove all invalidated tuples
+                '''
+                LOG.info('pyspace %s: attempting to optimize', self._name)
+                start = PYSPACE_DATA_OFFSET
+                last = PYSPACE_DATA_OFFSET
+                while True:
+                    LOG.info('pyspace %s: looking at tuple at offset %#010x', self._name, start)
+                    (length, fields, flags) = struct.unpack_from('IBB', self._mmap, start)
+                    LOG.info('  length: %#010x, fields: %d, flags: %s', length, fields, '{0:b}'.format(flags))
+                    if length == PYSPACE_END:
+                        LOG.info('  tail reached. all done.')
+                        struct.pack_into('I', self._mmap, last, PYSPACE_END)
+                        struct.pack_into('I', self._mmap, 0x10, last)
+                        return
+                    if flags & PYSPACE_FLAG_INVALID:
+                        LOG.info('  tuple invalidated. wiping.')
+                        start += 6 + length
+                        continue
+                    if last != start:
+                        LOG.info('  moving tuple from %d to %d', start, length)
+                        self._mmap[last:last+6+length] = self._mmap[start:start+6+length]
+                    start += 6 + length
+                    last += 6 + length
+
             def open(self):
                 '''
                 connect to the shmem of the given name. this initializes the shmem, if
