@@ -6,6 +6,10 @@ from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
 
+# dirty hack <3
+#list.__hash__ = tuple.__hash__
+
+
 class PySpaceApi(object):
     '''
     this class implements the tuple space api on the server side.
@@ -15,44 +19,33 @@ class PySpaceApi(object):
         '''
         constructor - prepare the tuple storage
         '''
-        self._tuples = []
+        self._tuples = dict()
 
     def put(self, tpl):
         '''
         put the given tuple into the tuple space.
         '''
-        self._tuples.append(tpl)
+        tpl = tuple(tuple(v) if isinstance(v, list) else v for v in tpl)
+        self._tuples[tpl] = self._tuples.get(tpl, 0) + 1
 
     def take(self, tpl):
         '''
         take the queried tuple from the tuple space and return it.
         '''
-        for i, t in enumerate(self._tuples):
-            if len(tpl) == len(t) and all(x == y or y is None for (x, y) in zip(tpl, t)):
-                res = self._tuples[i]
-                del self._tuples[i]
-                return res
-        return None
+        tpl = tuple(tuple(v) if isinstance(v, list) else v for v in tpl)
+        (t,k) = next((t,k) for (t,k) in self._tuples.items() if len(t) == len(tpl) and all(x == y or x is None for (x, y) in zip(tpl, t)))
+        if k == 1:
+            del self._tuples[t]
+        else:
+            self._tuples[t] = k - 1
+        return t
 
     def peek(self, tpl):
         '''
         seek the given tuple in the tuple space and return it.
         '''
-        for i, t in enumerate(self._tuples):
-            if len(tpl) == len(t) and all(x == y or y is None for (x, y) in zip(tpl, t)):
-                return self._tuples[i]
-        return None
-
-    def _find(self, tpl):
-        '''
-        find the queried tuple in the tuple space and return it, or None if
-        not found.
-        '''
-        return next((
-            res
-            for res in self._tuples
-            if len(res) == len(tpl) and all(x == y or y is None for (x, y) in zip(res, tpl))
-        ), None)
+        t = next(t for (t,k) in self._tuples.items() if len(t) == len(tpl) and all(x == y or x is None for (x, y) in zip(tpl, t)))
+        return t
 
 
 class PySpaceXMLRPCClient(ServerProxy):
